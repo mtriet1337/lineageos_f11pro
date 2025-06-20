@@ -1,1 +1,53 @@
+name: Build LineageOS 21
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout manifest
+      uses: actions/checkout@v3
+
+    - name: Set up build environment
+      run: |
+        sudo apt update
+        sudo apt install -y openjdk-17-jdk bc bison build-essential curl flex gperf \
+          libncurses5-dev libssl-dev libxml2-utils lzop python3 rsync unzip zip zlib1g-dev repo ccache
+
+    - name: Initialize repo
+      run: |
+        mkdir lineage && cd lineage
+        repo init -u https://github.com/LineageOS/android.git -b lineage-21.0
+        repo sync -c --no-clone-bundle --no-tags -j4
+
+    - name: Clone device, vendor, kernel trees
+      run: |
+        cd lineage
+        git clone https://github.com/mtriet1337/device_oppo_cph1969 device/oppo/cph1969
+        git clone https://github.com/mtriet1337/vendor_oppo_cph1969 vendor/oppo/cph1969
+        git clone https://github.com/mtriet1337/kernel_oppo_mt6771 kernel/oppo/mt6771
+
+    - name: Apply microG signature spoofing patch
+      run: |
+        cd lineage/frameworks/base
+        curl -L -o spoof.patch https://raw.githubusercontent.com/microg/LineageOS_patches/master/0001-Add-signature-spoofing-support.patch
+        git apply spoof.patch || true
+
+    - name: Start build
+      run: |
+        cd lineage
+        source build/envsetup.sh
+        lunch lineage_cph1969-userdebug
+        mka bacon -j4
+
+    - name: Upload ROM
+      uses: actions/upload-artifact@v3
+      with:
+        name: lineageos-21-cph1969
+        path: lineage/out/target/product/cph1969/*.zip
 
