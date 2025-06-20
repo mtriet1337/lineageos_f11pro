@@ -1,1 +1,1 @@
-# lineageos_oppo_f11pro
+# lineageos_oppof11pro
