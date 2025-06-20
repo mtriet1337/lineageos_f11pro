@@ -10,7 +10,7 @@ jobs:
       contents: write
 
     steps:
-    - name: Checkout manifest
+    - name: Checkout this repo
       uses: actions/checkout@v3
 
     - name: Set up build environment
@@ -50,4 +50,3 @@ jobs:
       with:
         name: lineageos-21-cph1969
         path: lineage/out/target/product/cph1969/*.zip
-
